@@ -1,17 +1,19 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const db = require('../db');
+const db = require("../db");
 
 // POST /api/users/register
-router.post('/register', (req, res) => {
-  const { phone, emergencyContacts } = req.body;
+router.post("/register", (req, res) => {
+  const { phone, name, emergencyContacts } = req.body;
 
   if (!phone) {
-    return res.status(400).json({ error: 'User phone number is required' });
+    return res.status(400).json({ error: "User phone number is required" });
   }
 
   const findUser = db.prepare(`SELECT * FROM users WHERE phone = ?`);
-  const insertUser = db.prepare(`INSERT INTO users (phone) VALUES (?)`);
+  const insertUser = db.prepare(
+    `INSERT INTO users (phone, name) VALUES (?, ?)`
+  );
   const insertContact = db.prepare(`
     INSERT INTO emergency_contacts (user_id, phone, name, relationship)
     VALUES (?, ?, ?, ?)
@@ -19,8 +21,8 @@ router.post('/register', (req, res) => {
 
   let user = findUser.get(phone);
   if (!user) {
-    const result = insertUser.run(phone);
-    user = { id: result.lastInsertRowid, phone };
+    const result = insertUser.run(phone, name || null);
+    user = { id: result.lastInsertRowid, phone, name: name || null };
   }
 
   if (Array.isArray(emergencyContacts)) {
@@ -35,26 +37,35 @@ router.post('/register', (req, res) => {
     }
   }
 
-  res.status(201).json({ message: 'Success', userId: user.id });
+  res
+    .status(201)
+    .json({
+      message: "Success",
+      userId: user.id,
+      phone: user.phone,
+      name: user.name,
+    });
 });
 
 // GET /api/users/fetch-all
-router.get('/fetch-all', (req, res) => {
-  const getAllUsers = db.prepare(`SELECT id, phone FROM users`);
+router.get("/fetch-all", (req, res) => {
+  const getAllUsers = db.prepare(`SELECT * FROM users`);
   const users = getAllUsers.all();
 
   res.json({ users });
 });
 
 // GET /api/users/:phone
-router.get('/:phone', (req, res) => {
+router.get("/:phone", (req, res) => {
   const phone = req.params.phone;
 
-  const findUser = db.prepare(`SELECT id, phone FROM users WHERE phone = ?`);
+  const findUser = db.prepare(
+    `SELECT id, phone, name FROM users WHERE phone = ?`
+  );
   const user = findUser.get(phone);
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ error: "User not found" });
   }
 
   const findContacts = db.prepare(`
@@ -69,8 +80,9 @@ router.get('/:phone', (req, res) => {
     user: {
       id: user.id,
       phone: user.phone,
-      emergencyContacts: contacts
-    }
+      name: user.name,
+      emergencyContacts: contacts,
+    },
   });
 });
 
