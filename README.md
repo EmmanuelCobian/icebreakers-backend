@@ -58,11 +58,15 @@ Before running any code, your computer must have the following installed
    git clone https://github.com/EmmanuelCobian/icebreakers-backend
    cd icebreakers-backend
    ```
-2. Startup the server
+2. Install dependencies
+   ```sh
+   npm install
+   ```
+3. Startup the server
    ```sh
    node index.js
    ```
-3. Head over to the api endpoint `https://localhost:3000/` where you should see the text `"Ice-Breakers Backend API is live!"`
+4. Head over to the api endpoint `https://localhost:3000/` where you should see the text `"Ice-Breakers Backend API is live!"`
 <br />
 
 4. If you want to fetch the API from a remote computer on the same network, locate your host machine's ip address and navigate to `http://[host ip]:3000` instead
